@@ -90,7 +90,11 @@ library EnumerableMap {
     /**
      * @dev Returns true if the key is in the map. O(1).
      */
-    function _contains(Map storage map, uint256 key) private view returns (bool) {
+    function _contains(Map storage map, uint256 key)
+        private
+        view
+        returns (bool)
+    {
         return map._indexes[key] != 0;
     }
 
@@ -111,8 +115,15 @@ library EnumerableMap {
      *
      * - `index` must be strictly less than {length}.
      */
-    function _at(Map storage map, uint256 index) private view returns (uint256, uint256) {
-        require(map._entries.length > index, 'EnumerableMap: index out of bounds');
+    function _at(Map storage map, uint256 index)
+        private
+        view
+        returns (uint256, uint256)
+    {
+        require(
+            map._entries.length > index,
+            "EnumerableMap: index out of bounds"
+        );
 
         MapEntry storage entry = map._entries[index];
         return (entry._key, entry._value);
@@ -126,7 +137,7 @@ library EnumerableMap {
      * - `key` must be in the map.
      */
     function _get(Map storage map, uint256 key) private view returns (uint256) {
-        return _get(map, key, 'EnumerableMap: nonexistent key');
+        return _get(map, key, "EnumerableMap: nonexistent key");
     }
 
     /**
@@ -168,14 +179,21 @@ library EnumerableMap {
      *
      * Returns true if the key was removed from the map, that is if it was present.
      */
-    function remove(UintToUintMap storage map, uint256 key) internal returns (bool) {
+    function remove(UintToUintMap storage map, uint256 key)
+        internal
+        returns (bool)
+    {
         return _remove(map._inner, key);
     }
 
     /**
      * @dev Returns true if the key is in the map. O(1).
      */
-    function contains(UintToUintMap storage map, uint256 key) internal view returns (bool) {
+    function contains(UintToUintMap storage map, uint256 key)
+        internal
+        view
+        returns (bool)
+    {
         return _contains(map._inner, key);
     }
 
@@ -195,7 +213,11 @@ library EnumerableMap {
      *
      * - `index` must be strictly less than {length}.
      */
-    function at(UintToUintMap storage map, uint256 index) internal view returns (uint256, uint256) {
+    function at(UintToUintMap storage map, uint256 index)
+        internal
+        view
+        returns (uint256, uint256)
+    {
         return _at(map._inner, index);
     }
 
@@ -206,7 +228,11 @@ library EnumerableMap {
      *
      * - `key` must be in the map.
      */
-    function get(UintToUintMap storage map, uint256 key) internal view returns (uint256) {
+    function get(UintToUintMap storage map, uint256 key)
+        internal
+        view
+        returns (uint256)
+    {
         return _get(map._inner, key);
     }
 
