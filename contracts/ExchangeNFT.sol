@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./EnumerableMap.sol";
+import "hardhat/console.sol";
 
 contract ExchangeNFT is ERC721Holder, Ownable, Pausable {
     using EnumerableMap for EnumerableMap.UintToUintMap;
@@ -114,9 +115,21 @@ contract ExchangeNFT is ERC721Holder, Ownable, Pausable {
 
         nft.safeTransferFrom(address(this), msg.sender, _tokenId);
 
+        uint256 length = tokenBids[_tokenId].length;
+
+        // clearing listing
         listings.remove(_tokenId);
         delete tokenSellers[_tokenId];
         _userSellingTokens[tokenSellers[_tokenId]].remove(_tokenId);
+
+        // clearing bids
+        for (uint256 i = 0; i < length; i++) {
+            address addr = indexToAddress[_tokenId][i];
+            delete indexToAddress[_tokenId][i];
+            delete addressToIndex[_tokenId][addr];
+            delete userBids[addr][_tokenId];
+        }
+        delete tokenBids[_tokenId];
 
         emit Unlist(msg.sender, _tokenId);
     }
@@ -172,6 +185,7 @@ contract ExchangeNFT is ERC721Holder, Ownable, Pausable {
         );
 
         tokenBids[_tokenId].push(_amount);
+        length = tokenBids[_tokenId].length;
         indexToAddress[_tokenId][length - 1] = msg.sender;
         addressToIndex[_tokenId][msg.sender] = length - 1;
         userBids[msg.sender][_tokenId] = _amount;
@@ -221,7 +235,7 @@ contract ExchangeNFT is ERC721Holder, Ownable, Pausable {
         address buyer = indexToAddress[_tokenId][length - 1];
         address seller = tokenSellers[_tokenId];
         require(quoteERC20.transferFrom(buyer, seller, price));
-        nft.safeTransferFrom(seller, buyer, _tokenId);
+        nft.safeTransferFrom(address(this), buyer, _tokenId);
 
         // clearing listing
         listings.remove(_tokenId);
@@ -253,7 +267,7 @@ contract ExchangeNFT is ERC721Holder, Ownable, Pausable {
 
     function getAllListings() public view returns (Listing[] memory) {
         Listing[] memory list = new Listing[](listings.length());
-        for (uint256 i = 1; i <= listings.length(); i++) {
+        for (uint256 i = 0; i < listings.length(); i++) {
             (uint256 tokenId, uint256 price) = listings.at(i);
             list[i] = Listing({tokenId: tokenId, price: price});
         }
@@ -280,7 +294,7 @@ contract ExchangeNFT is ERC721Holder, Ownable, Pausable {
     {
         Listing[] memory list =
             new Listing[](_userSellingTokens[user].length());
-        for (uint256 i = 1; i <= _userSellingTokens[user].length(); i++) {
+        for (uint256 i = 0; i < _userSellingTokens[user].length(); i++) {
             uint256 tokenId = _userSellingTokens[user].at(i);
             uint256 price = listings.get(tokenId);
             list[i] = Listing({tokenId: tokenId, price: price});
@@ -288,8 +302,12 @@ contract ExchangeNFT is ERC721Holder, Ownable, Pausable {
         return list;
     }
 
-    function getBidByUser(uint256 _tokenId) public view returns (uint256) {
-        return userBids[msg.sender][_tokenId];
+    function getBidByUser(uint256 _tokenId, address addr)
+        public
+        view
+        returns (uint256)
+    {
+        return userBids[addr][_tokenId];
     }
 
     function getAllBids(uint256 _tokenId)
